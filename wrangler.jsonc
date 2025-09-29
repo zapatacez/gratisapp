@@ -2,50 +2,74 @@
  * For more details on how to configure Wrangler, refer to:
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
+/**
+ * Cloudflare Workers + D1 Configuration
+ * Two Environment Setup: Production + Preview
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "gratisapp",
-	"main": "./dist/_worker.js/index.js",
-	"compatibility_date": "2025-09-27",
-	"compatibility_flags": [
-		"nodejs_compat",
-		"global_fetch_strictly_public"
-	],
-	"assets": {
-		"binding": "ASSETS",
-		"directory": "./dist"
-	},
-	"observability": {
-		"enabled": true
-	}
-	/**
-	 * Smart Placement
-	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
-	// "placement": { "mode": "smart" }
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
-	/**
-	 * Environment Variables
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-	 */
-	// "vars": { "MY_VARIABLE": "production_value" }
-	/**
-	 * Note: Use secrets to store sensitive data.
-	 * https://developers.cloudflare.com/workers/configuration/secrets/
-	 */
-	/**
-	 * Static Assets
-	 * https://developers.cloudflare.com/workers/static-assets/binding/
-	 */
-	// "assets": { "directory": "./public/", "binding": "ASSETS" }
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "gratisapp",
+  "main": "./dist/_worker.js",
+  "compatibility_date": "2024-05-02",
+  "compatibility_flags": ["nodejs_compat"],
+  
+  // Production environment (default)
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "gratisapp-prod-db",
+      "database_id": "34ab71e3-18da-4eb0-a4dd-046ca6e41381"
+    }
+  ],
+  
+  // Preview/Staging environment
+  "env": {
+    "preview": {
+      "name": "gratisapp-preview",
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "gratisapp-preview-db",
+          "database_id": "b806b6b1-e0ff-4543-a5a5-468a35c066c5"
+        }
+      ]
+    }
+  }
 }
+
+/**
+ * Smart Placement
+ * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+ */
+// "placement": { "mode": "smart" }
+
+/**
+ * Bindings
+ * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
+ * databases, object storage, AI inference, real-time communication and more.
+ * https://developers.cloudflare.com/workers/runtime-apis/bindings/
+ */
+
+/**
+ * Environment Variables
+ * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
+ */
+// "vars": { "MY_VARIABLE": "production_value" }
+
+/**
+ * Note: Use secrets to store sensitive data.
+ * https://developers.cloudflare.com/workers/configuration/secrets/
+ */
+
+/**
+ * Static Assets
+ * https://developers.cloudflare.com/workers/static-assets/binding/
+ */
+// "assets": { "binding": "ASSETS", "directory": "./dist" }
+
+/**
+ * Service Bindings (communicate between multiple Workers)
+ * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+ */
+// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
