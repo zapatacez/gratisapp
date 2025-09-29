@@ -35,6 +35,10 @@
         }
       ]
     }
+  },
+   "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist"
   }
 }
 

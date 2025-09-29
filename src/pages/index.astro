@@ -1,11 +1,107 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import EventCard from '../components/EventCard.astro';
+import Filters from '../components/Filters.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+interface Event {
+    id: number;
+    url: string;
+    title: string;
+    description: string;
+    cityId: number;
+    cityName: string;
+    districtId: number;
+    districtName: string;
+    eventDate: number | string;
+    imageUrl?: string;
+    organizer?: string;
+}
+
+interface EventsResponse {
+    events: Event[];
+}
+
+// Server-side fetch of events for initial render. The Filters form uses GET so filtering works without client JS.
+const url = new URL(Astro.request.url);
+const selectedCity = url.searchParams.get('city') || '';
+const selectedDistrict = url.searchParams.get('district') || '';
+
+async function fetchEventsServer(): Promise<Event[]> {
+    try {
+        const res = await fetch('/api/events');
+        if (!res.ok) return [];
+        const data = await res.json() as EventsResponse;
+        return data.events || [];
+    } catch {
+        return [];
+    }
+}
+
+interface Location {
+    id: number;
+    name: string;
+}
+
+interface District extends Location {
+    cityId: number;
+}
+
+function uniqBy<T>(arr: T[], key: keyof T): T[] {
+    const seen = new Map<any, T>();
+    for (const item of arr) {
+        const k = item[key];
+        if (!seen.has(k)) seen.set(k, item);
+    }
+    return Array.from(seen.values());
+}
+
+let allEvents = await fetchEventsServer();
+// Normalize eventDate to milliseconds
+allEvents = allEvents.map(e => ({ ...e, eventDate: (typeof e.eventDate === 'number') ? e.eventDate : Date.parse(e.eventDate) }));
+// Ensure upcoming only
+allEvents = allEvents.filter(e => Number(e.eventDate) >= Date.now());
+
+const cities: Location[] = uniqBy(
+    allEvents.filter(e => e.cityId).map(e => ({ id: e.cityId, name: e.cityName || 'Unknown' })), 
+    'id'
+);
+const districts: District[] = uniqBy(
+    allEvents.filter(e => e.districtId).map(e => ({ 
+        id: e.districtId, 
+        name: e.districtName || 'Unknown', 
+        cityId: e.cityId 
+    })), 
+    'id'
+);
+
+const filteredEvents = allEvents.filter(e => {
+    if (selectedCity && String(e.cityId) !== String(selectedCity)) return false;
+    if (selectedDistrict && String(e.districtId) !== String(selectedDistrict)) return false;
+    return true;
+});
 ---
 
 <Layout>
-	<Welcome />
+	<section class="mb-8">
+		<h1 class="text-3xl font-extrabold text-slate-900">Free events near you</h1>
+		<p class="text-slate-600 mt-2">Discover upcoming free events across Peru. Filter by city and district.</p>
+	</section>
+
+	<section class="mb-6" id="filters">
+		<!-- Server-rendered Filters; uses GET to filter without client JS -->
+		<Filters cities={cities} districts={districts} selectedCity={selectedCity} selectedDistrict={selectedDistrict} />
+	</section>
+
+	<section id="events">
+		<div id="events-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			{filteredEvents.length === 0 ? (
+				<div class="col-span-full text-center text-slate-500 mt-8">No upcoming events found.</div>
+			) : (
+				filteredEvents.map(e => (
+					<EventCard event={e} />
+				))
+			)}
+		</div>
+	</section>
+
 </Layout>

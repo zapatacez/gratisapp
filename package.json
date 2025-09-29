@@ -7,31 +7,33 @@
     "build": "astro build",
     "preview": "astro build && wrangler dev",
     "astro": "astro",
-    
     "deploy": "astro build && wrangler deploy",
     "deploy:preview": "astro build && wrangler deploy --env preview",
-    
     "cf-typegen": "wrangler types",
-    
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply gratisapp-prod-db --local",
     "db:migrate:preview": "wrangler d1 migrations apply gratisapp-preview-db --remote --env preview",
     "db:migrate:prod": "wrangler d1 migrations apply gratisapp-prod-db --remote",
-    
     "db:studio:local": "LOCAL_DB_PATH=$(find .wrangler/state/v3/d1/miniflare-D1DatabaseObject -type f -name '*.sqlite' -print -quit) drizzle-kit studio",
     "db:studio:preview": "source .drizzle.env && DB_ID='b806b6b1-e0ff-4543-a5a5-468a35c066c5' drizzle-kit studio",
     "db:studio:prod": "source .drizzle.env && DB_ID='34ab71e3-18da-4eb0-a4dd-046ca6e41381' drizzle-kit studio"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.4",
     "@astrojs/cloudflare": "^12.6.9",
+    "@tailwindcss/vite": "^4.1.13",
     "astro": "^5.14.1",
-    "drizzle-orm": "^0.44.5"
+    "drizzle-orm": "^0.44.5",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
+    "autoprefixer": "^10.4.14",
     "better-sqlite3": "^12.4.1",
     "cross-env": "^10.0.0",
     "drizzle-kit": "^0.31.5",
+    "postcss": "^8.4.32",
     "wrangler": "^4.40.2"
   }
 }
