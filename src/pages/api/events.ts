@@ -1,6 +1,7 @@
-import { drizzle } from 'drizzle-orm/d1';
-import { eq, gte } from 'drizzle-orm';
-import { events as eventsTable, cities as citiesTable, districts as districtsTable } from '../../db/schema';
+import { drizzle, } from 'drizzle-orm/d1';
+import { events as eventsTable, cities, districts } from '../../db/schema';
+import { eq, gte, and,getTableColumns } from 'drizzle-orm'; // Keep general operators from drizzle-orm
+
 
 export async function GET(...args: any[]) {
   try {
@@ -8,6 +9,11 @@ export async function GET(...args: any[]) {
     // 1) GET(context) where context.env exists (some adapters)
     // 2) GET(request, env) where env is the second positional argument (Cloudflare Workers)
     const maybeContext = args[0];
+    const url = new URL(maybeContext.request.url);
+    const cityId = url.searchParams.get('city');
+    const districtId = url.searchParams.get('district');
+
+
     const maybeEnv = args[1];
 
     const env = maybeEnv ?? (maybeContext && (maybeContext.env ?? maybeContext.context)) ?? undefined;
@@ -44,33 +50,28 @@ export async function GET(...args: any[]) {
     // D1 binding is configured as DB in wrangler.jsonc
     const db = drizzle(DBbinding);
 
-    const now = new Date();
+    // Base conditions: always filter for upcoming events
+    const allConditions = [gte(eventsTable.eventDate, new Date())];
 
-    // Select upcoming events (eventDate is stored as timestamp_ms -> mapped to Date in Drizzle)
-    const res = await db
-      .select()
+    // Dynamically add filters if they exist
+    if (cityId) allConditions.push(eq(eventsTable.cityId, Number(cityId)));
+    if (districtId) allConditions.push(eq(eventsTable.districtId, Number(districtId)));
+
+    // Build the query with joins to get all data in one go
+    const query = db
+      .select({
+        // Select all fields from events, and specific fields from cities/districts
+        ...getTableColumns(eventsTable),
+         cityName: cities.name,
+        districtName: districts.name,
+      })
       .from(eventsTable)
-      .where(gte(eventsTable.eventDate, now))
+      .leftJoin(cities, eq(eventsTable.cityId, cities.id))
+      .leftJoin(districts, eq(eventsTable.districtId, districts.id))
+      .where(and(...allConditions)) // Apply all conditions together
       .orderBy(eventsTable.eventDate);
 
-    // For each event, fetch city/district names (simple approach)
-    const events = await Promise.all(res.map(async (row: any) => {
-      let cityName = null;
-      let districtName = null;
-      try {
-        if (row.cityId) {
-          const c = await db.select().from(citiesTable).where(eq(citiesTable.id, row.cityId)).limit(1);
-          if (c && c[0]) cityName = c[0].name;
-        }
-        if (row.districtId) {
-          const d = await db.select().from(districtsTable).where(eq(districtsTable.id, row.districtId)).limit(1);
-          if (d && d[0]) districtName = d[0].name;
-        }
-      } catch (e) {
-        // ignore lookup errors
-      }
-      return { ...row, cityName, districtName };
-    }));
+    const events = await query;
 
     return new Response(JSON.stringify({ events }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (err) {

@@ -1,0 +1,168 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+export interface EventDetail {
+  id: number;
+  url: string;
+  title: string;
+  description: string;
+  cityId: number;
+  cityName: string;
+  districtId: number;
+  districtName: string;
+  eventDate: number | string;
+  imageUrl?: string;
+  organizer?: string;
+  capacity?: number;
+  location?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  // Add any other fields from your DB
+}
+
+// Get the ID from the URL (e.g., /events/123/clase-yoga-aire-libre)
+// We ignore the slug part - it's just for SEO
+const { id } = Astro.params;
+
+// Fetch the event details from your API
+async function fetchEventById(id: string): Promise<EventDetail | null> {
+  try {
+    const apiUrl = new URL(`/api/events/${id}`, Astro.url.origin);
+    const res = await fetch(apiUrl);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { event?: EventDetail };
+    return data.event || null;
+  } catch {
+    return null;
+  }
+}
+
+const event = await fetchEventById(id!);
+
+// If event not found, return 404
+if (!event) {
+  return Astro.redirect('/404');
+}
+
+// Format the date
+const eventDate = new Date(event.eventDate);
+const formattedDate = eventDate.toLocaleDateString('en-US', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+const formattedTime = eventDate.toLocaleTimeString('en-US', {
+  hour: '2-digit',
+  minute: '2-digit',
+});
+---
+
+<Layout>
+  <article class="max-w-4xl mx-auto">
+    <!-- Back button -->
+    <a href="/" class="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Back to events
+    </a>
+
+    <!-- Event Image -->
+    {event.imageUrl && (
+      <img 
+        src={event.imageUrl} 
+        alt={event.title}
+        class="w-full h-64 object-cover rounded-lg mb-6"
+      />
+    )}
+
+    <!-- Event Header -->
+    <header class="mb-8">
+      <h1 class="text-4xl font-extrabold text-slate-900 mb-4">{event.title}</h1>
+      
+      <div class="flex flex-wrap gap-4 text-slate-600">
+        <!-- Date & Time -->
+        <div class="flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <span>{formattedDate} at {formattedTime}</span>
+        </div>
+
+        <!-- Location -->
+        <div class="flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span>{event.districtName}, {event.cityName}</span>
+        </div>
+
+        <!-- Capacity -->
+        {event.capacity && (
+          <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span>Capacity: {event.capacity}</span>
+          </div>
+        )}
+      </div>
+    </header>
+
+    <!-- Event Description -->
+    <section class="mb-8">
+      <h2 class="text-2xl font-bold text-slate-900 mb-4">About this event</h2>
+      <p class="text-slate-700 whitespace-pre-line">{event.description}</p>
+    </section>
+
+    <!-- Organizer Info -->
+    {event.organizer && (
+      <section class="mb-8">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">Organizer</h2>
+        <p class="text-slate-700">{event.organizer}</p>
+      </section>
+    )}
+
+    <!-- Location Details -->
+    {event.location && (
+      <section class="mb-8">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">Location</h2>
+        <p class="text-slate-700">{event.location}</p>
+        <p class="text-slate-600 mt-2">{event.districtName}, {event.cityName}</p>
+      </section>
+    )}
+
+    <!-- Contact Information -->
+    {(event.contactEmail || event.contactPhone) && (
+      <section class="mb-8 bg-slate-50 p-6 rounded-lg">
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">Contact</h2>
+        {event.contactEmail && (
+          <p class="text-slate-700 mb-2">
+            Email: <a href={`mailto:${event.contactEmail}`} class="text-blue-600 hover:underline">{event.contactEmail}</a>
+          </p>
+        )}
+        {event.contactPhone && (
+          <p class="text-slate-700">
+            Phone: <a href={`tel:${event.contactPhone}`} class="text-blue-600 hover:underline">{event.contactPhone}</a>
+          </p>
+        )}
+      </section>
+    )}
+
+    <!-- External Link -->
+    {event.url && (
+      <div class="mt-8">
+        <a 
+          href={event.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+        >
+          Learn More / Register
+        </a>
+      </div>
+    )}
+  </article>
+</Layout>

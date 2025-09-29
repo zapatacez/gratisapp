@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import EventCard from '../components/EventCard.astro';
 import Filters from '../components/Filters.astro';
 
-interface Event {
+export interface Event {
     id: number;
     url: string;
     title: string;
@@ -15,10 +15,16 @@ interface Event {
     eventDate: number | string;
     imageUrl?: string;
     organizer?: string;
+    capacity?: number;
 }
 
 interface EventsResponse {
     events: Event[];
+}
+
+interface LocationsResponse {
+    cities: Location[];
+    districts: District[];
 }
 
 // Server-side fetch of events for initial render. The Filters form uses GET so filtering works without client JS.
@@ -28,12 +34,28 @@ const selectedDistrict = url.searchParams.get('district') || '';
 
 async function fetchEventsServer(): Promise<Event[]> {
     try {
-        const res = await fetch('/api/events');
+        // Pass the filter params from the page URL to the API endpoint URL
+        const apiUrl = new URL('/api/events', Astro.url.origin);
+        if (selectedCity) apiUrl.searchParams.set('city', selectedCity);
+        if (selectedDistrict) apiUrl.searchParams.set('district', selectedDistrict);
+
+        const res = await fetch(apiUrl);
         if (!res.ok) return [];
         const data = await res.json() as EventsResponse;
         return data.events || [];
     } catch {
         return [];
+    }
+}
+
+async function fetchLocations(): Promise<LocationsResponse> {
+    try {
+        // Use absolute URL for server-side fetching
+        const res = await fetch(new URL('/api/locations', Astro.url));
+        if (!res.ok) return { cities: [], districts: [] };
+        return await res.json() as LocationsResponse;
+    } catch {
+        return { cities: [], districts: [] };
     }
 }
 
@@ -46,39 +68,18 @@ interface District extends Location {
     cityId: number;
 }
 
-function uniqBy<T>(arr: T[], key: keyof T): T[] {
-    const seen = new Map<any, T>();
-    for (const item of arr) {
-        const k = item[key];
-        if (!seen.has(k)) seen.set(k, item);
-    }
-    return Array.from(seen.values());
+const [filteredEvents, { cities, districts }] = await Promise.all([
+    fetchEventsServer(),
+    fetchLocations()
+]);
+console.log('[Index] Number of events:', filteredEvents.length);
+if (filteredEvents.length > 0) {
+  console.log('[Index] First event sample:', {
+    id: filteredEvents[0].id,
+    title: filteredEvents[0].title,
+    keys: Object.keys(filteredEvents[0])
+  });
 }
-
-let allEvents = await fetchEventsServer();
-// Normalize eventDate to milliseconds
-allEvents = allEvents.map(e => ({ ...e, eventDate: (typeof e.eventDate === 'number') ? e.eventDate : Date.parse(e.eventDate) }));
-// Ensure upcoming only
-allEvents = allEvents.filter(e => Number(e.eventDate) >= Date.now());
-
-const cities: Location[] = uniqBy(
-    allEvents.filter(e => e.cityId).map(e => ({ id: e.cityId, name: e.cityName || 'Unknown' })), 
-    'id'
-);
-const districts: District[] = uniqBy(
-    allEvents.filter(e => e.districtId).map(e => ({ 
-        id: e.districtId, 
-        name: e.districtName || 'Unknown', 
-        cityId: e.cityId 
-    })), 
-    'id'
-);
-
-const filteredEvents = allEvents.filter(e => {
-    if (selectedCity && String(e.cityId) !== String(selectedCity)) return false;
-    if (selectedDistrict && String(e.districtId) !== String(selectedDistrict)) return false;
-    return true;
-});
 ---
 
 <Layout>
@@ -93,15 +94,16 @@ const filteredEvents = allEvents.filter(e => {
 	</section>
 
 	<section id="events">
-		<div id="events-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{filteredEvents.length === 0 ? (
-				<div class="col-span-full text-center text-slate-500 mt-8">No upcoming events found.</div>
-			) : (
-				filteredEvents.map(e => (
-					<EventCard event={e} />
-				))
-			)}
-		</div>
-	</section>
+  <div id="events-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {filteredEvents.length === 0 ? (
+      <div class="col-span-full text-center text-slate-500 mt-8">No upcoming events found.</div>
+    ) : (
+      filteredEvents.map(e => {
+        console.log('[Index] Mapping event:', e.id, e.title);
+        return <EventCard event={e} />;
+      })
+    )}
+  </div>
+</section>
 
 </Layout>
