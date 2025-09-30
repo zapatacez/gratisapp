@@ -1,43 +1,16 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import { getEventById } from '../../../lib/data';
 
-export interface EventDetail {
-  id: number;
-  url: string;
-  title: string;
-  description: string;
-  cityId: number;
-  cityName: string;
-  districtId: number;
-  districtName: string;
-  eventDate: number | string;
-  imageUrl?: string;
-  organizer?: string;
-  capacity?: number;
-  location?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  // Add any other fields from your DB
-}
+
 
 // Get the ID from the URL (e.g., /events/123/clase-yoga-aire-libre)
 // We ignore the slug part - it's just for SEO
 const { id } = Astro.params;
+/// Get DB binding
+const DB = Astro.locals.runtime.env.DB;
 
-// Fetch the event details from your API
-async function fetchEventById(id: string): Promise<EventDetail | null> {
-  try {
-    const apiUrl = new URL(`/api/events/${id}`, Astro.url.origin);
-    const res = await fetch(apiUrl);
-    if (!res.ok) return null;
-    const data = (await res.json()) as { event?: EventDetail };
-    return data.event || null;
-  } catch {
-    return null;
-  }
-}
-
-const event = await fetchEventById(id!);
+const event = await getEventById(DB, Number(id));
 
 // If event not found, return 404
 if (!event) {
@@ -69,9 +42,9 @@ const formattedTime = eventDate.toLocaleTimeString('en-US', {
     </a>
 
     <!-- Event Image -->
-    {event.imageUrl && (
+    {event.url && (
       <img 
-        src={event.imageUrl} 
+        src={event.url} 
         alt={event.title}
         class="w-full h-64 object-cover rounded-lg mb-6"
       />
@@ -100,14 +73,14 @@ const formattedTime = eventDate.toLocaleTimeString('en-US', {
         </div>
 
         <!-- Capacity -->
-        {event.capacity && (
+        <!-- {event.capacity && (
           <div class="flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
             </svg>
             <span>Capacity: {event.capacity}</span>
           </div>
-        )}
+        )} -->
       </div>
     </header>
 
@@ -118,10 +91,10 @@ const formattedTime = eventDate.toLocaleTimeString('en-US', {
     </section>
 
     <!-- Organizer Info -->
-    {event.organizer && (
+    {event.userId && (
       <section class="mb-8">
         <h2 class="text-2xl font-bold text-slate-900 mb-4">Organizer</h2>
-        <p class="text-slate-700">{event.organizer}</p>
+        <p class="text-slate-700">{event.userId}</p>
       </section>
     )}
 
@@ -135,7 +108,7 @@ const formattedTime = eventDate.toLocaleTimeString('en-US', {
     )}
 
     <!-- Contact Information -->
-    {(event.contactEmail || event.contactPhone) && (
+    <!-- {(event.contactEmail || event.contactPhone) && (
       <section class="mb-8 bg-slate-50 p-6 rounded-lg">
         <h2 class="text-2xl font-bold text-slate-900 mb-4">Contact</h2>
         {event.contactEmail && (
@@ -148,7 +121,7 @@ const formattedTime = eventDate.toLocaleTimeString('en-US', {
             Phone: <a href={`tel:${event.contactPhone}`} class="text-blue-600 hover:underline">{event.contactPhone}</a>
           </p>
         )}
-      </section>
+      </section> -->
     )}
 
     <!-- External Link -->
