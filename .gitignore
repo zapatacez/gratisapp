@@ -29,6 +29,11 @@ pnpm-debug.log*
 !.dev.vars.example
 .env*
 !.env.example
+!.env.local.example
 .wrangler
 .drizze.env
 .drizzle.env
+
+# event images
+images/
+!images/.gitkeep

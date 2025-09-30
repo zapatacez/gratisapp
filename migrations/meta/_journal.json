@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1759155680573,
-      "tag": "0000_amusing_rocket_raccoon",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1759156219899,
-      "tag": "0001_great_black_bird",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1759157263414,
-      "tag": "0002_harsh_rogue",
+      "when": 1759273987098,
+      "tag": "0000_shiny_praxagora",
       "breakpoints": true
     }
   ]

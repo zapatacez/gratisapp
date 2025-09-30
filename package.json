@@ -16,14 +16,20 @@
     "db:migrate:prod": "wrangler d1 migrations apply gratisapp-prod-db --remote",
     "db:studio:local": "LOCAL_DB_PATH=$(find .wrangler/state/v3/d1/miniflare-D1DatabaseObject -type f -name '*.sqlite' -print -quit) drizzle-kit studio",
     "db:studio:preview": "source .drizzle.env && DB_ID='b806b6b1-e0ff-4543-a5a5-468a35c066c5' drizzle-kit studio",
-    "db:studio:prod": "source .drizzle.env && DB_ID='34ab71e3-18da-4eb0-a4dd-046ca6e41381' drizzle-kit studio"
+    "db:studio:prod": "source .drizzle.env && DB_ID='34ab71e3-18da-4eb0-a4dd-046ca6e41381' drizzle-kit studio",
+    "import-events": "DB_ENV=local tsx scripts/import-events.ts",
+    "import-events:auto": "DB_ENV=local tsx scripts/import-events.ts --auto",
+    "import-events:preview": "DB_ENV=preview tsx scripts/import-events.ts",
+    "import-events:prod": "DB_ENV=prod tsx scripts/import-events.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
     "@astrojs/cloudflare": "^12.6.9",
     "@tailwindcss/vite": "^4.1.13",
     "astro": "^5.14.1",
+    "dotenv": "^16.4.7",
     "drizzle-orm": "^0.44.5",
+    "form-data": "^4.0.1",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2"
   },
@@ -34,6 +40,7 @@
     "cross-env": "^10.0.0",
     "drizzle-kit": "^0.31.5",
     "postcss": "^8.4.32",
+    "tsx": "^4.19.2",
     "wrangler": "^4.40.2"
   }
 }

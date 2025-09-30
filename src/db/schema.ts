@@ -37,6 +37,7 @@ export const events = sqliteTable("events", {
   title: text("title").notNull(),
   location: text("location").notNull(),
   description: text("description").notNull(),
+  organizer: text("organizer"),
   eventDate: integer("event_date", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(strftime('%s','now') * 1000)`),
@@ -57,6 +58,8 @@ export const events = sqliteTable("events", {
   districtId: integer("district_id")
     .notNull()
     .references(() => districts.id),
+  imageSource: text("image_source"), // Original filename
+  imageUrl: text("image_url"), // R2 public URL
 }, (table) => ({
   userIdIdx: index("user_id_idx").on(table.userId),
   eventDateIdx: index("event_date_idx").on(table.eventDate),

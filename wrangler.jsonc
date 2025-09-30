@@ -22,6 +22,14 @@
       "database_id": "34ab71e3-18da-4eb0-a4dd-046ca6e41381"
     }
   ],
+
+  // R2 bucket for event images
+  "r2_buckets": [
+    {
+      "binding": "EVENTS_BUCKET",
+      "bucket_name": "gratisapp-events-prod"
+    }
+  ],
   
   // Preview/Staging environment
   "env": {
@@ -32,6 +40,12 @@
           "binding": "DB",
           "database_name": "gratisapp-preview-db",
           "database_id": "b806b6b1-e0ff-4543-a5a5-468a35c066c5"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "EVENTS_BUCKET",
+          "bucket_name": "gratisapp-events-preview"
         }
       ]
     }

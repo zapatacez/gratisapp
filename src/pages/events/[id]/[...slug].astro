@@ -41,13 +41,15 @@ const formattedTime = eventDate.toLocaleTimeString('en-US', {
       Back to events
     </a>
 
-    <!-- Event Image -->
-    {event.url && (
-      <img 
-        src={event.url} 
-        alt={event.title}
-        class="w-full h-64 object-cover rounded-lg mb-6"
-      />
+    <!-- Event Image/Flyer -->
+    {event.imageUrl && (
+      <div class="mb-8">
+        <img
+          src={event.imageUrl}
+          alt={`${event.title} flyer`}
+          class="w-full max-w-2xl mx-auto rounded-lg shadow-lg"
+        />
+      </div>
     )}
 
     <!-- Event Header -->
@@ -94,7 +96,7 @@ const formattedTime = eventDate.toLocaleTimeString('en-US', {
     {event.userId && (
       <section class="mb-8">
         <h2 class="text-2xl font-bold text-slate-900 mb-4">Organizer</h2>
-        <p class="text-slate-700">{event.userId}</p>
+        <p class="text-slate-700">{event.organizer}</p>
       </section>
     )}
 
